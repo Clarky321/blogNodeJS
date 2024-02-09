@@ -9,9 +9,9 @@ export const register = async (req, res) => {
 
         const isUsed = await User.findOne({ username })
 
-        if(isUsed) {
+        if (isUsed) {
             return res.json({
-                message: 'Данный username уже занят.'
+                message: 'Данный username уже занят.',
             })
         }
 
@@ -23,10 +23,20 @@ export const register = async (req, res) => {
             password: hash,
         })
 
+        const token = jwt.sign(
+            {
+                id: newUser._id,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' },
+        )
+
         await newUser.save()
 
         res.json({
-            newUser, message: 'Регистрация прошла успешно.'
+            newUser,
+            token,
+            message: 'Регистрация прошла успешно.'
         })
 
     } catch (error) {
@@ -39,23 +49,25 @@ export const login = async (req, res) => {
     try {
         const { username, password } = req.body
         const user = await User.findOne({ username })
-        if(!user) {
+
+        if (!user) {
             return res.json({
-                message: 'Такого пользователя не существует'
+                message: 'Такого юзера не существует.',
             })
         }
 
         const isPasswordCorrect = await bcrypt.compare(password, user.password)
 
-        if(!isPasswordCorrect) {
+        if (!isPasswordCorrect) {
             return res.json({
-                message: 'Неверный пароль',
+                message: 'Неверный пароль.',
             })
         }
 
-        const token = jwt.sign({
-            id: user._id,
-        },
+        const token = jwt.sign(
+            {
+                id: user._id,
+            },
             process.env.JWT_SECRET,
             { expiresIn: '30d' },
         )
@@ -63,11 +75,10 @@ export const login = async (req, res) => {
         res.json({
             token,
             user,
-            message: 'Вы вошли в систему',
+            message: 'Вы вошли в систему.',
         })
-
     } catch (error) {
-        res.json({ message: 'Ошибка при авторизации' })
+        res.json({ message: 'Ошибка при авторизации.' })
     }
 }
 
@@ -76,15 +87,16 @@ export const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.userId)
 
-        if(!user) {
+        if (!user) {
             return res.json({
-                message: 'Такого пользователя не существует'
+                message: 'Такого юзера не существует.',
             })
         }
-        
-        const token = jwt.sign({
-            id: user._id,
-        },
+
+        const token = jwt.sign(
+            {
+                id: user._id,
+            },
             process.env.JWT_SECRET,
             { expiresIn: '30d' },
         )
@@ -93,8 +105,7 @@ export const getMe = async (req, res) => {
             user,
             token,
         })
-
     } catch (error) {
-        res.json({ message: 'Нет доступа' })
+        res.json({ message: 'Нет доступа.' })
     }
 }
